@@ -105,7 +105,7 @@ Exporter::export_ok_tags('all');
 use strict;
 use warnings;
 
-our $VERSION=1.01;
+our $VERSION=1.02;
 
 use Encode;
 
@@ -121,9 +121,11 @@ my $AttrValRE = qr/[^>\s'"`][^>\s]*|'[^']{0,2000}?'|"[^"]{0,2000}?"|`[^`]{0,2000
 my $AttributesRE = qr/(?:(?:$AttrKeyRE\s*)?(?:=\s*$AttrValRE\s*)?)*/;
 my $TagNameRE = qr/[A-Za-z][A-Za-z0-9\#\&\;\:\!_-]*/;
 
-my $Selectors = qr/[^{]*?/;
-my $StyleKey = qr/[^:}]+?/;
-my $StyleValue = qr/[^;}]+|.*$/; 
+my $StyleSelectors = qr/[^{}\s][^{}]*?/;
+my $StyleName = qr/[^:}\s][^:{}]*?/;
+my $StyleValue = qr/[^;}\s][^;}]*|.*$/; 
+my $StyleRule = qr/$StyleName\s*:\s*$StyleValue\s*/;
+my $StyleRules = qr/\s*(?:$StyleRule)?(?:;\s*$StyleRule)*(?:;\s*)?/;
 
 my $Fonts            = qr/"?([A-Za-z0-9\s-]+)"?/;
 my $Alignments       = qr/(absbottom|absmiddle|all|autocentre|baseline|bottom|center|justify|left|middle|none|right|texttop|top)/;
@@ -578,7 +580,7 @@ my %CharToEntity = reverse %EntityToChar;
 my %QuoteRe = ('"' => qr/(["&<>])/, "'" => qr/(['&<>])/, "" => qr/(["&<>])/);
 
 # Default list of mismatched tags to track
-my %MismatchedTags = map { $_ => 1 } qw(table tbody thead tr td th font div span pre center);
+my %MismatchedTags = map { $_ => 1 } qw(table tbody thead tr td th font div span pre center blockquote dl ul ol h1 h2 h3 h4 h5 h6 fieldset tt);
 
 # When fixing mismatched tags, sometimes a close tag
 #  shouldn't close all the way out
@@ -591,7 +593,7 @@ my %MismatchedTags = map { $_ => 1 } qw(table tbody thead tr td th font div span
 #  give a list of closing tags which cause us to stop
 #  and not close any more
 my %MismatchedTagNest = (
-  table => [ qw(tbody thead tfoot tr th td) ],
+  table => [ qw(tbody thead tfoot tr th td caption colgroup col) ],
   tbody => [ qw(tr th td) ],
   tr => [ qw(th td) ],
   font => [ '' ],
@@ -602,8 +604,12 @@ $_ = { map { $_ => 1 } @$_ } for values %MismatchedTagNest;
 # If we see a table, we should expect to see a tbody
 #  next. If not, we need to add it because the browser
 #  will implicitly open it!
+# For each tag, give list of tags that should follow. If
+#  we don't find one of them following, we open a new
+#  implicit tag of the first one in the list
+#  eg. <table><td> -> <table><tr><td>
 my %ImplicitOpenTags = (
-  table => [ qw(tbody tr thead tfoot caption) ],
+  table => [ qw(tr tbody thead tfoot caption colgroup col) ],
   thead => [ qw(tr) ],
   tbody => [ qw(tr) ],
   tr => [ qw(td th) ],
@@ -663,6 +669,20 @@ Array reference of tags for which the code would check for matching opening and 
 
 You can pass an arbitrary scalar as a 'context' value that's then passed as the first parameter to all callback functions. Most commonly this is something like '$Self'
 
+=item B<allow_double_defang>
+
+If this is true, then tag names and attribute names which already begin
+with the defang string ("defang_" by default) will have an additional
+copy of the defang string prepended if they are flagged to be defanged
+by the return value of a callback, or if the tag or attribute name
+is unknown.
+
+The default is to assume that tag names and attribute names beginning 
+with the defang string are already made safe, and need no further
+modification, even if they are flagged to be defanged by the
+return value of a callback.  Any tag or attribute modifications made
+directly by a callback are still performed.
+
 =item B<Debug>
 
 If set, prints debugging output.
@@ -690,7 +710,8 @@ sub new {
   %mismatched_tags_to_fix = map { $_ => 1 } @{$Opts{'mismatched_tags_to_fix'}} if $Opts{'mismatched_tags_to_fix'};
 
   my $Self = {
-    DefangString => 'defang_',
+    defang_string => 'defang_',
+    allow_double_defang => $Opts{allow_double_defang},
     tags_to_callback => \%tags_to_callback,
     tags_callback => $Opts{tags_callback},
     attribs_to_callback => \%attribs_to_callback,
@@ -700,9 +721,9 @@ sub new {
     mismatched_tags_to_fix => \%mismatched_tags_to_fix,
     fix_mismatched_tags => $Opts{fix_mismatched_tags},
     context => $Opts{context},
-    OpenedTags => [],
-    OpenedTagsCount => {},
-    ImplicitTags => [],
+    opened_tags => [],
+    opened_tags_count => {},
+    implicit_tags => [],
     Debug => $Opts{Debug},
   };
 
@@ -1116,7 +1137,11 @@ sub defang {
         # defang unknown tags
         if ($Defang) {
           warn "defang Defanging $Tag" if $Debug;
-          $Tag = $Self->{DefangString} . $Tag;
+          $Tag = $Self->{defang_string} . $Tag
+            if $Self->{allow_double_defang}
+              || (
+                substr( $Tag, 0, length( $Self->{defang_string} ) ) ne
+                $Self->{defang_string} );
           $OpenAngle =~ s/</<!--/;
           $CloseAngle =~ s/>/-->/;
         }
@@ -1234,7 +1259,7 @@ sub defang {
   if ($Self->{Reentrant} <= 1) {
     my $RemainingClosingTags = '';
 
-    my ($OpenedTags, $OpenedTagsCount) = @$Self{qw(OpenedTags OpenedTagsCount)};
+    my ($OpenedTags, $OpenedTagsCount) = @$Self{qw(opened_tags opened_tags_count)};
     while (my $PreviousOpenedTag = pop @$OpenedTags) {
       $RemainingClosingTags .= "<!-- close mismatch --></$PreviousOpenedTag>";
       $OpenedTagsCount->{$PreviousOpenedTag}--;
@@ -1242,11 +1267,11 @@ sub defang {
     $O .= $RemainingClosingTags;
 
     # Also clear implicit tags
-    $Self->{ImplicitTags} = [];
+    $Self->{implicit_tags} = [];
 
     if ($Debug) {
       warn "Check all tags closed and counts zeroed";
-      warn "Not all tags closed" if grep { $_ > 0 } values %$OpenedTagsCount;
+      die "Not all tags closed" if grep { $_ > 0 } values %$OpenedTagsCount;
     }
   }
 
@@ -1432,7 +1457,7 @@ sub defang_style {
   }
     
   # Clean up all comments, expand character escapes and such
-  $Self->cleanup_style($Content);
+  $Self->cleanup_style($Content, $IsAttr);
 
   # Handle any wrapping HTML comments. If no comments, we add
   my ($OpeningHtmlComment, $ClosingHtmlComment) = ('', '');
@@ -1444,18 +1469,18 @@ sub defang_style {
   # Style attributes can optionally have selector type elements, so we check whether we 
   # have a '{' in $Content: if yes, its style data with selector type elements
   my $Naked = $Content !~ m/\{/;
-  my $StyleRule = qr/\s*$StyleKey\s*:\s*$StyleValue\s*(?:;\s*$StyleKey\s*:\s*$StyleValue\s*)*;?\s*/o;
   warn "defang_style Naked=$Naked" if $Self->{Debug};
 
   # And suitably change the regex to match the data
-  my $SelectorRuleRE = $Naked ? qr/(\s*)()()()($StyleRule)()(\s*)/o : 
-                       qr/(\s*)((?:$Selectors))(\s*)(\{)($StyleRule)(\})(\s*)/o;
+  my $SelectorRuleRE = $Naked ? qr/(\s*)()()()($StyleRules)()(\s*)/o : 
+                       qr/(\s*)((?:$StyleSelectors)?)(\s*)(\{)($StyleRules)(\})(\s*)/o;
 
   my (@Selectors, @SelectorRules, %ExtraData );
 
   # Now we parse the selectors and declarations
   while ($Content =~ s{$SelectorRuleRE}{}) {
     my ($Selector, $SelectorRule) = ($2, $5);
+    last if $Selector eq '' && $SelectorRule eq '';
     push @Selectors, $Selector;
     push @SelectorRules, $SelectorRule;
     warn "defang_style Selector=$Selector" if $Self->{Debug};
@@ -1529,12 +1554,20 @@ sub cleanup_style {
   my $Self = shift;
   
   for ($_[0]) {
-    # Expand escapes
-    s/(?:&x|\\)(0?[\da-f]{1,6});?/defined($1) ? chr(hex($1)) : ""/egi;
-    s/(?:&#)([\d]{1,7});?/defined($1) ? chr($1) : ""/egi;
-
+    # Expand unicode \ refs
+    s/(?:\\)(0?[\da-f]{1,6});?/defined($1) && hex($1) < 1_114_111 && hex($1) != 65535 && !(hex($1) > 55295 && hex($1) < 57344) ? chr(hex($1)) : ""/egi;
     # Remove all remaining invalid escapes TODO This probably is not correct. Backslashes are required to be left alone by the CSS syntax
     s/\\//g;
+
+    # Second param is true if it's an attribute, which means these have already been done
+    if (!$_[1]) {
+      # Expand escapes
+      s{&#(?:x(0?[\da-f]{1,6})|([\d]{1,7}));?}{
+        my $V = (defined($1) && hex($1)) || (defined($2) && int($2)) || undef;
+        $V && $V < 1_114_111 && $V != 65535 && !($V > 55295 && $V < 57344) ? chr($V) : "";
+      }egi;
+      s/&(quot|apos|amp|lt|gt);?/$EntityToChar{lc($1)} || warn "no entity for: $1"/egi;
+    }
 
     # Remove all CSS comments
     s{/\*.*?\*/}{}sg;
@@ -1835,7 +1868,16 @@ sub defang_attributes {
 
     # And we attach the defang string here, if the attribute should be defanged
     # (attribute could be undef for buggy html, eg <ahref=blah>)
-    $Attr->[0] = $Self->{DefangString} . ($Attr->[0] || '') if $Attr->[7];
+    $Attr->[0] = $Self->{defang_string}
+      . ( $Attr->[0] || '' )
+      if $Attr->[7]
+        && (
+          $Self->{allow_double_defang}
+          || (
+            substr( ( $Attr->[0] || '' ),
+              0, length( $Self->{defang_string} ) ) ne $Self->{defang_string}
+          )
+        );
     # Set this to undef, or this value will appear in the output
     $Attr->[7] = undef;
 
@@ -1856,7 +1898,7 @@ sub defang_attributes {
   while (my ($Key,$Value) = each %AttributeHash ) {
     my $Attr = [" " . $Key, "", "=", '"', $$Value, '"', ""];
     if (defined $Attr->[4]) {
-      $Attr->[4] =~ s/(['"<>&])/$CharToEntity{$1}/eg
+      $Attr->[4] =~ s/(['"<>&])/'&'.$CharToEntity{$1}.';'/eg
     } else {
       @$Attr[2..6] = (undef) x 5;
     }
@@ -1872,7 +1914,7 @@ sub defang_attributes {
   }
   
   if ($Self->{fix_mismatched_tags} && ($DefangTag == 2 || $DefangTag == 0)) {
-    my ($OpenedTags, $OpenedTagsCount) = @$Self{qw(OpenedTags OpenedTagsCount)};
+    my ($OpenedTags, $OpenedTagsCount) = @$Self{qw(opened_tags opened_tags_count)};
    
     # Check for correctly nest closing tags
     if ($IsEndTag && $Self->{mismatched_tags_to_fix}->{$lcTag}) {
@@ -1922,6 +1964,8 @@ sub defang_attributes {
         my $lastTag = $lcTag;
         while ($ImplicitTags && !$ImplicitTags->{$lastTag}) {
           my $Tag = $ImplicitTags->{default};
+          # Don't insert implicit tag if it's actually the one we actuall just parsed
+          last if $Tag eq $lcTag;
           $$OutR .= "<!-- $Tag implicit open due to $lastTag --><$Tag>";
           if ($Self->{mismatched_tags_to_fix}->{$Tag}) {
             push @$OpenedTags, $Tag;
@@ -1977,12 +2021,25 @@ sub cleanup_attribute {
   # Create a "stripped" attribute value which removes all embedded whitespace and control characters
 
   # Substitute character entities with actual characters
-  # (avoid invalid chars + surrogate pairs)
-  $AttrVal =~ s/(?:&#x|\\[xu]|%)(0?[\da-f]{1,6});?/defined($1) && hex($1) < 1_114_111 && hex($1) != 65535 && !(hex($1) > 55295 && hex($1) < 57344) ? chr(hex($1)) : ""/egi;
-  $AttrVal =~ s/(?:&#)([\d]{1,7});?/defined($1) && $1 < 1_114_111 && $1 != 65535 && !($1 > 55295 && $1 < 57344)? chr($1) : ""/egi;
-  $AttrVal =~ s/(?:&)(quot|apos|amp|lt|gt);?/$EntityToChar{lc($1)} || warn "no entity for: $1"/egi;
+  # - in HTML, &#xa; &#x0a; &#x000a; &#10; are all character codes
+  # - in IE, &#xajavascript is same as &#xa;javascript
+  # - avoid invalid chars + surrogate pairs
+  $AttrVal =~ s{&#(?:x(0?[\da-f]{1,6})|([\d]{1,7}));?}{
+    my $V = (defined($1) && hex($1)) || (defined($2) && int($2)) || undef;
+    $V && $V < 1_114_111 && $V != 65535 && !($V > 55295 && $V < 57344) ? chr($V) : "";
+  }egi;
+
+  # These get requoted when we output the attribute
+  $AttrVal =~ s/&(quot|apos|amp|lt|gt);?/$EntityToChar{lc($1)} || warn "no entity for: $1"/egi;
+
+  # - in JS, \u000a is unicode char (note &#x5c;&#x75;&#x30;&#x30;&#x37;&#x32; -> \u0072 -> r, so do HTML entities first)
+  $AttrVal =~ s/\\u(0?[\da-f]{1,6});?/defined($1) && hex($1) < 1_114_111 && hex($1) != 65535 && !(hex($1) > 55295 && hex($1) < 57344) ? chr(hex($1)) : ""/egi;
 
   my $AttrValStripped = $AttrVal;
+  # Also undo URL decoding for "stripped" value
+  # (can't do this above, because it's non-reversible, eg "http://...?a=%25" => "http://...?a=?",
+  #  how would we know which ? to requote when outputting?)
+  $AttrValStripped =~ s/%([\da-f]{2})/chr(hex($1))/egi;
   $AttrValStripped =~ s/[\x00-\x19]*//g;
   $AttrValStripped =~ s/^\x20*//g; # http://ha.ckers.org/xss.html#XSS_Spaces_meta_chars
 

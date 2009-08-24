@@ -2,7 +2,7 @@
 
 BEGIN { do '/home/mod_perl/hm/ME/FindLibs.pm'; }
 
-use Test::More tests => 88;
+use Test::More tests => 89;
 use HTML::Defang;
 use strict;
 
@@ -21,6 +21,17 @@ $Res = $Defang->defang($H);
 like($Res, qr{^<style><!--${CommentStartText}
 body \{color: black\}
 $CommentEndText--></style>$}s, "Simple style tag");
+
+$H = <<EOF;
+<style>
+body {font-family: &quot;sans\\0020serif&#x22;\\003b color\\003a black; }
+</style>
+EOF
+$Res = $Defang->defang($H);
+
+like($Res, qr{^<style><!--${CommentStartText}
+body \{font-family: "sans serif"; color: black; \}
+$CommentEndText--></style>$}s, "Style tag with html and unicode entities");
 
 $H = <<EOF;
 <style>

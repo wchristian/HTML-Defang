@@ -1,5 +1,20 @@
 Revision history for Perl extension HTML::Defang.
 
+1.02  Mon Aug 24 18:00:00 2009
+	- add col and colgroup as possible ImplicitOpenTags
+	- change to prevent double-defang by default.  Add option to allow it.
+	- open a new <tr>, not a <tbody> if we need to open an implicit tag
+	- add tbody back into list of implicit table tags
+	- include & ... ; when encoding entity in new attributes
+	- don't insert implicit open tag if it's the tag we actually just parsed
+	- avoid excessive backtracking on some style tags. cleanup unquoting code
+	- track tt blocks as well
+	- add more tags to track
+	- more quoting fixes
+	- expand html entities in styles as well
+	- don't unescape % sequences in URLs, just in stripped test value
+	- in attributes, % sequences are only every 2 chars
+
 1.01  Tue Apr 27 11:35:44 2009
 	- first public release
 

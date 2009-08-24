@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 BEGIN { do '/home/mod_perl/hm/ME/FindLibs.pm'; }
 
-use Test::More tests => 83;
+use Test::More tests => 85;
 use HTML::Defang;
 use strict;
 
@@ -342,13 +342,21 @@ like($Res, qr{^<table><tr><td>before-fontafter-font
 </td></tr></table>$}, "Don't close out all tags on mismatched close");
 
 $H = <<EOF;
+<table><col align="left"></col><tr><td></td></tr></table>
+EOF
+$Res = $Defang->defang($H);
+$Res =~ s/<!--.*?-->//g;
+
+like($Res, qr{^<table><col align="left"></col><tr><td></td></tr></table>$}, "Don't close out all tags on mismatched close11111");
+
+$H = <<EOF;
 <table><div>
 EOF
 $Res = $Defang->defang($H);
 $Res =~ s/<!--.*?-->//g;
 
-like($Res, qr{^<table><tbody><tr><td><div>
-</div></td></tr></tbody></table>$}, "Check implicit opening tags");
+like($Res, qr{^<table><tr><td><div>
+</div></td></tr></table>$}, "Check implicit opening tags");
 
 $H = <<EOF;
 <table><tr><td><table></table><div>
@@ -358,6 +366,15 @@ $Res =~ s/<!--.*?-->//g;
 
 like($Res, qr{^<table><tr><td><table></table><div>
 </div></td></tr></table>$}, "Check implicit opening tags with nested closed");
+
+$H = <<EOF;
+<table><tr><td></td></tr><td>
+EOF
+$Res = $Defang->defang($H);
+$Res =~ s/<!--.*?-->//g;
+
+like($Res, qr{^<table><tr><td></td></tr><tr><td>
+</td></tr></table>$}, "Check implicit opening tags partial");
 
 
 $Defang = HTML::Defang->new(
