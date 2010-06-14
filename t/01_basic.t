@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 BEGIN { do '/home/mod_perl/hm/ME/FindLibs.pm'; }
 
-use Test::More tests => 85;
+use Test::More tests => 89;
 use HTML::Defang;
 use strict;
 
@@ -172,6 +172,13 @@ like($Res, qr{2:<img style='width: some"s'>}, "Attribute containing double quote
 like($Res, qr{3:<img style='width: some`s'>}, "Attribute containing backtick");
 
 $H = <<EOF;
+<img width="1" /  = "/">
+EOF
+$Res = $Defang->defang($H);
+
+like($Res, qr{<img width="1" defang_/  = "/">}, "Use '/' as an attribute key");
+
+$H = <<EOF;
 1:<html><!--
 EOF
 $Res = $Defang->defang($H);
@@ -320,6 +327,28 @@ like($Res, qr{^<table>
 </table>$}, "Add multiple missing closing tags when one closing tag and one non-callback tag is present");
 
 $H = <<EOF;
+<h1>
+<pre>
+<div>
+<h1>
+</div>
+<blockquote>
+</blockquote>
+EOF
+$Res = $Defang->defang($H);
+$Res =~ s/<!--.*?-->//g;
+
+like($Res, qr{^<h1>
+<pre>
+<div>
+<h1>
+</h1></div>
+<blockquote>
+</blockquote>
+</pre></h1>$}, "Don't break all the way to top in nested tag case");
+
+
+$H = <<EOF;
 <pre>
 <table>
 </table>
@@ -342,14 +371,6 @@ like($Res, qr{^<table><tr><td>before-fontafter-font
 </td></tr></table>$}, "Don't close out all tags on mismatched close");
 
 $H = <<EOF;
-<table><col align="left"></col><tr><td></td></tr></table>
-EOF
-$Res = $Defang->defang($H);
-$Res =~ s/<!--.*?-->//g;
-
-like($Res, qr{^<table><col align="left"></col><tr><td></td></tr></table>$}, "Don't close out all tags on mismatched close11111");
-
-$H = <<EOF;
 <table><div>
 EOF
 $Res = $Defang->defang($H);
@@ -357,6 +378,14 @@ $Res =~ s/<!--.*?-->//g;
 
 like($Res, qr{^<table><tr><td><div>
 </div></td></tr></table>$}, "Check implicit opening tags");
+
+$H = <<EOF;
+<table></div>
+EOF
+$Res = $Defang->defang($H);
+$Res =~ s/<!--.*?-->//g;
+
+like($Res, qr{^<table><tr><td></td></tr></table>$}, "Check implicit opening tags 2");
 
 $H = <<EOF;
 <table><tr><td><table></table><div>
@@ -375,6 +404,14 @@ $Res =~ s/<!--.*?-->//g;
 
 like($Res, qr{^<table><tr><td></td></tr><tr><td>
 </td></tr></table>$}, "Check implicit opening tags partial");
+
+$H = <<EOF;
+<div>abc<span>def<p>abc</p>def</span>abc</div>
+EOF
+$Res = $Defang->defang($H);
+$Res =~ s/<!--.*?-->//g;
+
+like($Res, qr{^<div>abc<span>def</span><p><span>abc</span></p><span>def</span>abc</div>$}, "Check close/open inline within block tags");
 
 
 $Defang = HTML::Defang->new(
@@ -453,3 +490,10 @@ like($Res, qr{^1:<br>
 15:<br \\\\\\\\>
 16:<br\\\\\\\\ >
 17:<br \\\\\\\\ >$}, "Self closing tag in all its incarnations. Eg: <br>, <br/>, <br / >, <br \\>");
+
+$H = <<EOF;
+1:<unknownTag title="something with -- in it">
+EOF
+$Res = $Defang->defang($H);
+
+like($Res, qr{^1:<!--${DefangString}unknownTag title="something with  in it"-->}, "Defang unknown tag with --'s in it");

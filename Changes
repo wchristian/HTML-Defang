@@ -1,5 +1,23 @@
 Revision history for Perl extension HTML::Defang.
 
+1.03  Mon Jun 14 16:22:35 2010
+	- fix incorrect tag closing when "/" appears as attribute key
+	- handle deep span nests with the same attrs, not just no attrs
+	- we might not find the tag if we hit one that stops further breaking out, that's not an error to report
+	- track noscript mismatched tags
+	- more nested table tags fixes
+	- unicode fixes on attribute/style entity expansions
+	- more deep nested span/div hacks
+	- avoid undef error
+	- optimisation for nested inline tags within block tags
+	- massive speedup on deeply nested tags
+	- defang tweaks on large sets of style rules
+	- use /\G..../gc matching on style rather than s///
+	- close/re-open inline tags across block tags
+	- only convert \u sequences in stripped values
+	- track mismatched <p> tags, and defang -- in a tag as well
+	- need to strip -- in defanged tags because --'s in comments are bad
+
 1.02  Mon Aug 24 18:00:00 2009
 	- add col and colgroup as possible ImplicitOpenTags
 	- change to prevent double-defang by default.  Add option to allow it.
