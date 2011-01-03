@@ -26,16 +26,26 @@ HTML::Defang - Cleans HTML as well as CSS of scripting and other executable cont
   # Callback for custom handling specific HTML tags  
   sub DefangTagsCallback {
     my ($Self, $Defang, $OpenAngle, $lcTag, $IsEndTag, $AttributeHash, $CloseAngle, $HtmlR, $OutR) = @_;
-    return 1 if $lcTag eq 'br';    # Explicitly defang this tag, eventhough safe
-    return 0 if $lcTag eq 'embed'; # Explicitly whitelist this tag, eventhough unsafe
-    return 2 if $lcTag eq 'img';   # I am not sure what to do with this tag, so process as HTML::Defang normally would
+
+    # Explicitly defang this tag, eventhough safe
+    return DEFANG_ALWAYS if $lcTag eq 'br';
+
+    # Explicitly whitelist this tag, eventhough unsafe
+    return DEFANG_NONE if $lcTag eq 'embed';
+
+    # I am not sure what to do with this tag, so process as HTML::Defang normally would
+    return DEFANG_DEFAULT if $lcTag eq 'img';
   }
 
   # Callback for custom handling URLs in HTML attributes as well as style tag/attribute declarations
   sub DefangUrlCallback {
     my ($Self, $Defang, $lcTag, $lcAttrKey, $AttrValR, $AttributeHash, $HtmlR) = @_;
-    return 0 if $$AttrValR =~ /safesite.com/i; # Explicitly allow this URL in tag attributes or stylesheets
-    return 1 if $$AttrValR =~ /evilsite.com/i; # Explicitly defang this URL in tag attributes or stylesheets
+
+    # Explicitly allow this URL in tag attributes or stylesheets
+    return DEFANG_NONE if $$AttrValR =~ /safesite.com/i;
+
+    # Explicitly defang this URL in tag attributes or stylesheets
+    return DEFANG_ALWAYS if $$AttrValR =~ /evilsite.com/i;
   }
 
   # Callback for custom handling style tags/attributes
@@ -47,8 +57,12 @@ HTML::Defang - Cleans HTML as well as CSS of scripting and other executable cont
       foreach my $KeyValueRules (@$SelectorRule) {
         foreach my $KeyValueRule (@$KeyValueRules) {
           my ($Key, $Value) = @$KeyValueRule;
-          $$KeyValueRule[2] = 1 if $Value =~ '!important';                  # Comment out any '!important' directive
-          $$KeyValueRule[2] = 1 if $Key =~ 'position' && $Value =~ 'fixed'; # Comment out any 'position=fixed;' declaration
+
+          # Comment out any '!important' directive
+          $$KeyValueRule[2] = DEFANG_ALWAYS if $Value =~ '!important';
+
+          # Comment out any 'position=fixed;' declaration
+          $$KeyValueRule[2] = DEFANG_ALWAYS if $Key =~ 'position' && $Value =~ 'fixed';
         }
       }
       $i++;
@@ -58,9 +72,14 @@ HTML::Defang - Cleans HTML as well as CSS of scripting and other executable cont
   # Callback for custom handling HTML tag attributes
   sub DefangAttribsCallback {
     my ($Self, $Defang, $lcTag, $lcAttrKey, $AttrValR, $HtmlR) = @_;
-    $$AttrValR = '0' if $lcAttrKey eq 'border';  # Change all 'border' attribute values to zero.
-    return 1 if $lcAttrKey eq 'src';             # Defang all 'src' attributes
-    return 0;
+
+    # Change all 'border' attribute values to zero.
+    $$AttrValR = '0' if $lcAttrKey eq 'border';
+
+    # Defang all 'src' attributes
+    return DEFANG_ALWAYS if $lcAttrKey eq 'src';
+
+    return DEFANG_NONE;
   }
 
 =head1 DESCRIPTION
@@ -99,13 +118,17 @@ HTML::Defang can defang whole tags, any attribute in a tag, any URL that appear 
 
 use Exporter;
 our @ISA = ('Exporter');
-%EXPORT_TAGS = (all => [qw(@FormTags)]);
+%EXPORT_TAGS = (all => [qw(@FormTags DEFANG_NONE DEFANG_ALWAYS DEFANG_DEFAULT)]);
 Exporter::export_ok_tags('all');
 
 use strict;
 use warnings;
 
-our $VERSION=1.03;
+our $VERSION=1.04;
+
+use constant DEFANG_NONE => 0;
+use constant DEFANG_ALWAYS => 1;
+use constant DEFANG_DEFAULT => 2;
 
 use Encode;
 
@@ -117,7 +140,7 @@ our @FormTags = qw(form input textarea select option button fieldset label legen
 # Some regexps for matching HTML tags + key=value attributes
 my $AttrKeyStartLineRE = qr/(?:[^=<>\s\/\\]{1,}|[\/]\s*(?==))/;
 my $AttrKeyRE = qr/(?<=[\s'"\/])$AttrKeyStartLineRE/;
-my $AttrValRE = qr/[^>\s'"`][^>\s]*|'[^']{0,2000}?'|"[^"]{0,2000}?"|`[^`]{0,2000}?`/;
+my $AttrValRE = qr/[^>\s'"`][^>\s]*|'[^']{0,16384}?'|"[^"]{0,16384}?"|`[^`]{0,16384}?`/;
 my $AttributesRE = qr/(?:(?:$AttrKeyRE\s*)?(?:=\s*$AttrValRE\s*)?)*/;
 my $TagNameRE = qr/[A-Za-z][A-Za-z0-9\#\&\;\:\!_-]*/;
 
@@ -155,7 +178,7 @@ my %Rules =
   "form-method"  => qr/^(get|post)$/i,
   "frame"        => qr/^(void|above|below|hsides|vsides|lhs|rhs|box|border)$/i,
   # href: Not javascript, vbs or vbscript
-  "href"         => qr/^([A-Za-z]*script|.*\&{|mocha|hcp|opera|about|smb|\/dev\/)/i,
+  "href"         => [ qr/(?i:^([a-z]*script\s*:|.*\&{|mocha|hcp|opera\s*:|about\s*:|smb|\/dev\/|<))|[^\x00-\x7f]/ ],
   "usemap-href"  => qr/^#[A-Za-z0-9_.-]+$/,  # this is not really a href at all!
   "input-size"   => qr/^(\d{1,4})$/, # some browsers freak out with very large widgets
   "input-type"   => qr/^(button|checkbox|file|hidden|image|password|radio|readonly|reset|submit|text)$/i,
@@ -181,14 +204,14 @@ my %Rules =
 #  "style"        => qr/expression|eval|script:|mocha:|\&{|\@import|(?<!background-)position:|background-image/i, # XXX there are probably a million more ways to cause trouble with css!
   "style"        => qr/^.*$/s,
 #kc In addition to this, we could strip all 'javascript:|expression|' etc. from all attributes(in attribute_cleanup())
-  "stylesheet"   => qr/expression|eval|script:|mocha:|\&{|\@import/i, # stylesheets are forbidden if Embedded => 1.  css positioning can be allowed in an iframe.
+  "stylesheet"   => [ qr/expression|eval|script:|mocha:|\&{|\@import/i ], # stylesheets are forbidden if Embedded => 1.  css positioning can be allowed in an iframe.
   # NB see also `process_stylesheet' below
-  "style-type"   => qr/script|mocha/i,
+  "style-type"   => [ qr/script|mocha/i ],
   "size"         => qr/^[\d.]+(px|%)?$/i,
   "target"       => qr/^[A-Za-z0-9_][A-Za-z0-9_.-]*$/,
   "base-href"    => qr/^https?:\/\/[\w.\/]+$/,
   "anything"     => qr/^.*$/, #[ 0, 0 ],
-  "meta:content" => [ 0, 0 ],
+  "meta:content" => [ qr// ],
 );
 
 my %CommonAttributes =
@@ -614,7 +637,7 @@ my %CharToEntity = reverse %EntityToChar;
 my %QuoteRe = ('"' => qr/(["&<>])/, "'" => qr/(['&<>])/, "" => qr/(["&<>])/);
 
 # Default list of mismatched tags to track
-my %MismatchedTags = map { $_ => 1 } qw(table tbody thead tr td th font div span pre center blockquote dl ul ol h1 h2 h3 h4 h5 h6 fieldset tt p noscript);
+my %MismatchedTags = map { $_ => 1 } qw(table tbody thead tr td th font div span pre center blockquote dl ul ol h1 h2 h3 h4 h5 h6 fieldset tt p noscript a);
 
 # When fixing mismatched tags, sometimes a close tag
 #  shouldn't close all the way out
@@ -856,15 +879,15 @@ If $Defang->{tags_callback} exists, and HTML::Defang has parsed a tag preset in 
 
 =over 4
 
-=item 0
+=item DEFANG_NONE
 
 The current tag will not be defanged.
 
-=item 1
+=item DEFANG_ALWAYS
 
 The current tag will be defanged.
 
-=item 2
+=item DEFANG_DEFAULT
 
 The current tag will be processed normally by HTML:Defang as if there was no callback method specified.
 
@@ -898,15 +921,15 @@ See $AttributeHash for details of decoding.
 
 =over 4
 
-=item 0
+=item DEFANG_NONE
 
 The current attribute will not be defanged.
 
-=item 1
+=item DEFANG_ALWAYS
 
 The current attribute will be defanged.
 
-=item 2
+=item DEFANG_DEFAULT
 
 The current attribute will be processed normally by HTML:Defang as if there was no callback method specified.
 
@@ -943,15 +966,15 @@ rather than just a scalar value. You can add attributes (remember to make it a s
 
 =over 4
 
-=item 0
+=item DEFANG_NONE
 
 The current URL will not be defanged.
 
-=item 1
+=item DEFANG_ALWAYS
 
 The current URL will be defanged.
 
-=item 2
+=item DEFANG_DEFAULT
 
 The current URL will be processed normally by HTML:Defang as if there was no callback method specified.
 
@@ -984,12 +1007,12 @@ The declaration blocks will get parsed into the following data structure:
 
   [
     [
-      [ "b", "c", 2],
-      [ "d", "e", 2]
+      [ "b", "c", DEFANG_DEFAULT ],
+      [ "d", "e", DEFANG_DEFAULT ]
     ],
     [
-      [ "k", "l", 2],
-      [ "m", "n", 2]
+      [ "k", "l", DEFANG_DEFAULT ],
+      [ "m", "n", DEFANG_DEFAULT ]
     ]
   ]
 
@@ -997,13 +1020,13 @@ So, generally each property:value pair in a declaration is parsed into an array 
 
   ["property", "value", X]
 
-where X can be 0, 1 or 2, and 2 the default value. A client can manipulate this value to instruct HTML::Defang to defang this property:value pair.
+where X can be DEFANG_NONE, DEFANG_ALWAYS or DEFANG_DEFAULT, and DEFANG_DEFAULT the default value. A client can manipulate this value to instruct HTML::Defang to defang this property:value pair.
 
-0 - Do not defang
+DEFANG_NONE - Do not defang
 
-1 - Defang the style:property value
+DEFANG_ALWAYS - Defang the style:property value
 
-2 - Process this as if there is no callback specified
+DEFANG_DEFAULT - Process this as if there is no callback specified
 
 =item I<$IsAttr>
 
@@ -1153,7 +1176,7 @@ sub defang {
         }
 
         NoParseAttributes:
-        my $Defang = 1;
+        my $Defang = DEFANG_ALWAYS;
 
         my $TagOps = $Tags{lc $Tag};
 
@@ -1178,10 +1201,10 @@ sub defang {
         my $TagContent = $TagTrail . join("", grep { defined } map { @$_ } @Attributes);
 
         $Defang ||= $Self->track_tags(\$O, \$I, $TagOps, \$OpenAngle, $IsEndTag, $Tag, \$TagContent)
-          if $Self->{fix_mismatched_tags} && ($Defang == 2 || $Defang == 0);
+          if $Self->{fix_mismatched_tags} && ($Defang != DEFANG_ALWAYS);
 
         # defang unknown tags
-        if ($Defang) {
+        if ($Defang != DEFANG_NONE) {
           warn "defang Defanging $Tag" if $Debug;
           $Tag = $Self->{defang_string} . $Tag
             if $Self->{allow_double_defang}
@@ -1289,6 +1312,9 @@ sub defang {
       if (exists $Self->{AppendOutput}) {
         $O .= delete $Self->{AppendOutput};
       }
+      if (exists $Self->{DelayedAppendOutput}) {
+        $O .= $Self->defang(delete $Self->{DelayedAppendOutput});
+      }
       next;
     }
   
@@ -1344,7 +1370,8 @@ sub add_to_output {
 
 sub defang_and_add_to_output {
   my $Self = shift;
-  $Self->add_to_output($Self->defang(shift));
+  $Self->{DelayedAppendOutput} = '' if !defined $Self->{DelayedAppendOutput};
+  $Self->{DelayedAppendOutput} .= shift;
 }
 
 =item B<INTERNAL METHODS>
@@ -1429,8 +1456,7 @@ sub defang_script {
   }
 
   # Also defang tag
-  return 1;
-
+  return DEFANG_ALWAYS;
 }
 
 =item I<defang_style($OutR, $HtmlR, $TagOps, $OpenAngle, $IsEndTag, $Tag, $TagTrail, $Attributes, $CloseAngle, $IsAttr)>
@@ -1465,7 +1491,7 @@ sub defang_style {
   warn "defang_style Tag=$Tag IsEndTag=$IsEndTag IsAttr=$IsAttr" if $Self->{Debug};
 
   # Nothing to do if end tag
-  return 0 if !$IsAttr && $IsEndTag;
+  return DEFANG_NONE if !$IsAttr && $IsEndTag;
 
   # Do all style work in byte mode
   use bytes;
@@ -1561,8 +1587,7 @@ sub defang_style {
   }
    
   # We don't want <style> tags to be defanged
-  return 0;
-
+  return DEFANG_NONE;
 }
 
 =item I<cleanup_style($StyleString)>
@@ -1686,7 +1711,7 @@ sub defang_stylerule {
       warn "defang_stylerule Key=$Key Value=$Value Separator=$Separator ValueEnd=$ValueEnd" if $Self->{Debug};
       # Store everything except style property and value in a hash
       $StyleKeyExtraData{lc $Key} = [$KeyPilot, $Separator, $QuoteStart, $QuoteEnd, $ValueEnd, $ValueTrail];
-      my $DefangStyleRule = 2;
+      my $DefangStyleRule = DEFANG_DEFAULT;
 
       # If the style value has a URL in it and URL callback has been supplied, make a url_callback
       if ($Self->{url_callback} && $Value =~ m/\s*url\(\s*((?:['"])?)(.*?)\1\s*\)/i) {
@@ -1768,10 +1793,10 @@ sub defang_stylerule {
         ($Separator, $ValueEnd, $ValueTrail) = (":", ";", " ") unless $v;
         
         # Flag to defang if a url, expression or unallowed character found
-        if ($Defang == 2) {
-          $Defang = $Value =~ m{^\s*[a-z0-9%!"'`:()#\s.,\/+-]+\s*;?\s*$}i ? 0 : 1;
-          $Defang = $Value =~ m{^\s*url\s*\(}i ? 1 : $Defang;
-          $Defang = $Value =~ m{^\s*expression\s*\(}i ? 1 : $Defang;
+        if ($Defang == DEFANG_DEFAULT) {
+          $Defang = $Value =~ m{^\s*[a-z0-9%!"'`:()#\s.,\/+-]+\s*;?\s*$}i ? DEFANG_NONE : DEFANG_ALWAYS;
+          $Defang = $Value =~ m{^\s*url\s*\(}i ? DEFANG_ALWAYS : $Defang;
+          $Defang = $Value =~ m{^\s*expression\s*\(}i ? DEFANG_ALWAYS : $Defang;
         }
 
         ($KeyPilot, $Key, $Separator, $QuoteStart, $Value, $QuoteEnd, $ValueEnd, $ValueTrail) =
@@ -1779,8 +1804,8 @@ sub defang_stylerule {
             ($KeyPilot, $Key, $Separator, $QuoteStart, $Value, $QuoteEnd, $ValueEnd, $ValueTrail);
         
         # Comment out the style property-value pair if $Defang
-        $Key = $Defang ? "/*" . $Key : $Key;
-        $ValueEnd = $Defang ? $ValueEnd . "*/" : $ValueEnd;
+        $Key = $Defang != DEFANG_NONE ? "/*" . $Key : $Key;
+        $ValueEnd = $Defang != DEFANG_NONE ? $ValueEnd . "*/" : $ValueEnd;
 
         # Put the rule together back
         if (defined($Key)) {
@@ -1841,7 +1866,7 @@ sub defang_attributes {
       $AttribRule = $Tags{$lcTag}{$lcAttrKey};
     }
 
-    my $DefangAttrib = 2;
+    my $DefangAttrib = DEFANG_DEFAULT;
 
     $AttribRule = $CommonAttributes{$lcAttrKey} unless $AttribRule;
     warn "defang_attributes AttribRule=$AttribRule" if $Debug;
@@ -1862,33 +1887,37 @@ sub defang_attributes {
     # If a attribute callback is supplied and its interested in this attribute, we make a attribs_callback
     if ($Self->{attribs_callback} && exists($Self->{attribs_to_callback}->{$lcAttrKey})) {
       warn "defang_attributes Making attribute callback for Tag=$Tag AttrKey=$AttrKey" if $Debug;
-      $DefangAttrib = $Self->{attribs_callback}->($Self->{context}, $Self, $lcTag, $lcAttrKey, $AttrValR, $HtmlR, $OutR);
+      my $DefangResult = $Self->{attribs_callback}->($Self->{context}, $Self, $lcTag, $lcAttrKey, $AttrValR, $HtmlR, $OutR);
+      # Only use new result if not already DEFANG_ALWAYS from url_callback
+      $DefangAttrib = $DefangResult if $DefangAttrib != DEFANG_ALWAYS;
     }
 
-    if (($DefangAttrib == 2) && $AttribRule) {
+    if (($DefangAttrib == DEFANG_DEFAULT) && $AttribRule) {
       my $Rule = $Rules{$AttribRule};
       warn "defang_attributes AttribRule=$AttribRule Rule=$Rule" if $Debug;
 
       # We whitelist the attribute if the value matches the rule
-      if (ref($Rule) eq "Regexp" && $AttrValStripped =~ $Rule) {
-        $DefangAttrib = 0;
+      if (ref($Rule) eq "Regexp") {
+        $DefangAttrib = ($AttrValStripped =~ $Rule) ? DEFANG_NONE : DEFANG_ALWAYS;
+      }
+
+      # Hack. Ref to array is a blacklist regexp
+      if (ref($Rule) eq "ARRAY") {
+        $DefangAttrib = ($AttrValStripped =~ $Rule->[0]) ? DEFANG_ALWAYS : DEFANG_NONE;
       }
       
-      # Defang all scripts in attributes
-      $DefangAttrib = $AttrValStripped =~ /^(javascript:|livescript:|mocha:|vbscript:)/i ? 1 : $DefangAttrib;
-      
     } elsif (!$AttribRule)  {
-      $DefangAttrib = 1;
+      $DefangAttrib = DEFANG_ALWAYS;
     }
 
     warn "defang_attributes DefangAttrib=$DefangAttrib" if $Debug;
 
     # Store the attribute defang flag
-    push @$Attr, $DefangAttrib if $DefangAttrib;
+    push @$Attr, $DefangAttrib if $DefangAttrib != DEFANG_NONE;
 
   }
 
-  my $DefangTag = 2;
+  my $DefangTag = DEFANG_DEFAULT;
 
   # Callback if the tag is in @$tags_to_callback
   if (exists($Self->{tags_to_callback}->{$lcTag})) {
@@ -1912,7 +1941,7 @@ sub defang_attributes {
     # (attribute could be undef for buggy html, eg <ahref=blah>)
     $Attr->[0] = $Self->{defang_string}
       . ( $Attr->[0] || '' )
-      if $Attr->[7]
+      if defined($Attr->[7]) && $Attr->[7] != DEFANG_NONE
         && (
           $Self->{allow_double_defang}
           || (
@@ -1920,7 +1949,7 @@ sub defang_attributes {
               0, length( $Self->{defang_string} ) ) ne $Self->{defang_string}
           )
         );
-    # Set this to undef, or this value will appear in the output
+    # Set defang value to undef, or this value will appear in the output
     $Attr->[7] = undef;
 
     # Requote specials in attribute value
@@ -1951,8 +1980,8 @@ sub defang_attributes {
   @$Attributes = @OutputAttributes;
 
   # If its a known tag, we whitelist it
-  if ($DefangTag == 2 && (my $TagOps = $Tags{$lcTag})) {
-    $DefangTag = 0;
+  if ($DefangTag == DEFANG_DEFAULT && (my $TagOps = $Tags{$lcTag})) {
+    $DefangTag = DEFANG_NONE;
   }
   
   return $DefangTag;
@@ -2007,7 +2036,7 @@ sub track_tags {
     my ($Found, $ClosingTags) = (0, '');
 
     # Tag not even open, just defang it
-    return 1 if !$OpenedTagsCount->{$lcTag};
+    return DEFANG_ALWAYS if !$OpenedTagsCount->{$lcTag};
 
     # Check tag stack up to find mismatches
     while (@$OpenedTags) {
@@ -2035,7 +2064,7 @@ sub track_tags {
 
     # Otherwise hit tag that stops breaking out, defang it
     } else {
-      return 1;
+      return DEFANG_ALWAYS;
     }
 
   }
@@ -2066,7 +2095,7 @@ sub track_tags {
     }
   }
 
-  return 0;
+  return DEFANG_NONE;
 }
 
 sub track_tag {
@@ -2201,7 +2230,6 @@ sub get_applicable_charset {
 
   # Return fallback charset if no header or meta charset found
   return $Charset ? $Charset : shift;
-
 }
 
 =head1 SEE ALSO

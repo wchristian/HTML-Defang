@@ -1,5 +1,12 @@
 Revision history for Perl extension HTML::Defang.
 
+1.04  Mon Jan 03 12:00:00 2011
+	- Change defang_and_add_to_output to delay the defanging until after the current tag is actually emmitted to the output
+	- If url callback has marked the attribute as to be defanged, skip result of attribute callback
+	- Track <a> tags as part of mismatched tag tracking
+	- Replace magic constants of 0, 1 and 2 in HTML::Defang with exported constants DEFANG_NONE, DEFANG_ALWAYS and DEFANG_DEFAULT
+	- allow attribute values upto 16384 chars long
+
 1.03  Mon Jun 14 16:22:35 2010
 	- fix incorrect tag closing when "/" appears as attribute key
 	- handle deep span nests with the same attrs, not just no attrs

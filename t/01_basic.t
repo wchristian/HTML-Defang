@@ -312,7 +312,7 @@ like($Res, qr{^<table>
 $H = <<EOF;
 <table>
 <tr>
-<td><a>
+<td><i>
 <pre>
 </tr>
 EOF
@@ -321,7 +321,7 @@ $Res =~ s/<!--.*?-->//g;
 
 like($Res, qr{^<table>
 <tr>
-<td><a>
+<td><i>
 <pre>
 </pre></td></tr>
 </table>$}, "Add multiple missing closing tags when one closing tag and one non-callback tag is present");
@@ -412,6 +412,15 @@ $Res = $Defang->defang($H);
 $Res =~ s/<!--.*?-->//g;
 
 like($Res, qr{^<div>abc<span>def</span><p><span>abc</span></p><span>def</span>abc</div>$}, "Check close/open inline within block tags");
+
+#	$H = <<EOF;
+#	<div><i><b><p><span>abc</span></p></i></b></div>
+#	EOF
+#	$Res = $Defang->defang($H);
+#	$Res =~ s/<!--.*?-->//g;
+#	
+#	# Note: This result isn't actually quite right (should be reopened with <p><i><b><span>), but it'll do
+#	like($Res, qr{^<div><i><b></b></i><p><span><i><b>abc</b></i></span></p></div>$}, "Check close/open multiple inline within block tags");
 
 
 $Defang = HTML::Defang->new(
