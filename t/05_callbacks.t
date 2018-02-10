@@ -532,50 +532,50 @@ like($Res, qr{^1:<a style="a:b">
 7:<a style="i3:j3;k3:l3;">
 8:<a style=" i4  :   j4    ;     k4      :       l4        ;         ">
 
-9:<a style="{q:r}">
-10:<a style=" {  s   :    t     }      ">
-11:<a style="{u:v;}">
-12:<a style=" {  w   :    x     ;      }       ">
+9:<a style="\{q:r\}">
+10:<a style=" \{  s   :    t     \}      ">
+11:<a style="\{u:v;\}">
+12:<a style=" \{  w   :    x     ;      \}       ">
 
-13:<a style="{i5:j5;k5:l5}">
-14:<a style=" {  i6   :    j6     ;      k6       :        l6         }          ">
-15:<a style="{i7:j7;k7:l7;}">
-16:<a style=" {  i8   :    j8     ;      k8       :        l8         ;          }          ">
+13:<a style="\{i5:j5;k5:l5\}">
+14:<a style=" \{  i6   :    j6     ;      k6       :        l6         \}          ">
+15:<a style="\{i7:j7;k7:l7;\}">
+16:<a style=" \{  i8   :    j8     ;      k8       :        l8         ;          \}          ">
 
-17:<a style="s1{y:z}">
-18:<a style=" s1  {   y2    :     z2      }       ">
-19:<a style="s1{y3:z3;}">
-20:<a style=" s1  {   y4    :     z4      ;       }        ">
+17:<a style="s1\{y:z\}">
+18:<a style=" s1  \{   y2    :     z2      \}       ">
+19:<a style="s1\{y3:z3;\}">
+20:<a style=" s1  \{   y4    :     z4      ;       \}        ">
 
-21:<a style="s1{y5:z5;y6:z6}">
-22:<a style=" s2  {   y7    :     z7      ;       y8        :         z8          }           ">
-23:<a style="s3{y9:z9;y10:z11;}">
-24:<a style=" s4  {   y12    :     z12      ;       y13        :         z13          ;           }            ">
+21:<a style="s1\{y5:z5;y6:z6\}">
+22:<a style=" s2  \{   y7    :     z7      ;       y8        :         z8          \}           ">
+23:<a style="s3\{y9:z9;y10:z11;\}">
+24:<a style=" s4  \{   y12    :     z12      ;       y13        :         z13          ;           \}            ">
 
-25:<a style="s5{aa:ab}s6{ac:ad}">
-26:<a style=" s7  {   ae    :     af      }       s8        {         ag          :           ah            }             ">
-27:<a style="s5{ai:aj;}s6{ak:al;}">
-28:<a style=" s7  {   am    :     an      }       s8        {         ao          :           ap            ;             }              ">
+25:<a style="s5\{aa:ab\}s6\{ac:ad\}">
+26:<a style=" s7  \{   ae    :     af      \}       s8        \{         ag          :           ah            \}             ">
+27:<a style="s5\{ai:aj;\}s6\{ak:al;\}">
+28:<a style=" s7  \{   am    :     an      \}       s8        \{         ao          :           ap            ;             \}              ">
 
-29:<a style="{color: #900} :link {background: #ff0} :visited {background: #fff} :hover {outline: thin red solid} :active {background: #00f}">
-30:<a style="{color: #090; line-height: 1.2} ::first-letter {color: #900}">
-31:<a href="abccomscript" title="a" id="a1" style="{color: #900}
-          :link {background: #ff0}
-          :visited {background: #fff}
-          :hover {outline: thin red solid}
-          :active {background: #00f}">
+29:<a style="\{color: #900\} :link \{background: #ff0\} :visited \{background: #fff\} :hover \{outline: thin red solid\} :active \{background: #00f\}">
+30:<a style="\{color: #090; line-height: 1.2\} ::first-letter \{color: #900\}">
+31:<a href="abccomscript" title="a" id="a1" style="\{color: #900\}
+          :link \{background: #ff0\}
+          :visited \{background: #fff\}
+          :hover \{outline: thin red solid\}
+          :active \{background: #00f\}">
 <style><!--${CommentStartText}   
 
-selector1{ab:cd}
-selector2{ab:cccd;}
-selector3{ab:cd;ef:gh}
-selector4{ab:cd;ef:gh;}
-selector5{ab:cd;x:y;p:q;/\*r:url\(http://a.com\);\*//\*e:url\("http://b.com"\) ;\*/}
- selector6  {   ab    :     cd      }       
- selector7  {   ab    :     cd      ;       }        
- selector8  {   ab    :     cd      ;       ef        :         gh          }           
- selector9  {   ab    :     cd      ;       ef        :         gh          ;           }            
- selector10  {   ab    :     cd      ;       x         :         y           ;           /\*r            :             url\(http://a.com\)              \*/}               
+selector1\{ab:cd\}
+selector2\{ab:cccd;\}
+selector3\{ab:cd;ef:gh\}
+selector4\{ab:cd;ef:gh;\}
+selector5\{ab:cd;x:y;p:q;/\*r:url\(http://a.com\);\*//\*e:url\("http://b.com"\) ;\*/\}
+ selector6  \{   ab    :     cd      \}       
+ selector7  \{   ab    :     cd      ;       \}        
+ selector8  \{   ab    :     cd      ;       ef        :         gh          \}           
+ selector9  \{   ab    :     cd      ;       ef        :         gh          ;           \}            
+ selector10  \{   ab    :     cd      ;       x         :         y           ;           /\*r            :             url\(http://a.com\)              \*/\}               
     ${CommentEndText}--></style>$}, "CSS callback - force normal");
 
 $Defang = HTML::Defang->new(
@@ -659,50 +659,50 @@ like($Res, qr{^1:<a style="a:b">
 7:<a style="i3:j3;k3:l3;">
 8:<a style=" i4  :   j4    ;     k4      :       l4        ;         ">
 
-9:<a style="{q:r}">
-10:<a style=" {  s   :    t     }      ">
-11:<a style="{u:v;}">
-12:<a style=" {  w   :    x     ;      }       ">
+9:<a style="\{q:r\}">
+10:<a style=" \{  s   :    t     \}      ">
+11:<a style="\{u:v;\}">
+12:<a style=" \{  w   :    x     ;      \}       ">
 
-13:<a style="{i5:j5;k5:l5}">
-14:<a style=" {  i6   :    j6     ;      k6       :        l6         }          ">
-15:<a style="{i7:j7;k7:l7;}">
-16:<a style=" {  i8   :    j8     ;      k8       :        l8         ;          }          ">
+13:<a style="\{i5:j5;k5:l5\}">
+14:<a style=" \{  i6   :    j6     ;      k6       :        l6         \}          ">
+15:<a style="\{i7:j7;k7:l7;\}">
+16:<a style=" \{  i8   :    j8     ;      k8       :        l8         ;          \}          ">
 
-17:<a style="s1{y:z}">
-18:<a style=" s1  {   y2    :     z2      }       ">
-19:<a style="s1{y3:z3;}">
-20:<a style=" s1  {   y4    :     z4      ;       }        ">
+17:<a style="s1\{y:z\}">
+18:<a style=" s1  \{   y2    :     z2      \}       ">
+19:<a style="s1\{y3:z3;\}">
+20:<a style=" s1  \{   y4    :     z4      ;       \}        ">
 
-21:<a style="s1{y5:z5;y6:z6}">
-22:<a style=" s2  {   y7    :     z7      ;       y8        :         z8          }           ">
-23:<a style="s3{y9:z9;y10:z11;}">
-24:<a style=" s4  {   y12    :     z12      ;       y13        :         z13          ;           }            ">
+21:<a style="s1\{y5:z5;y6:z6\}">
+22:<a style=" s2  \{   y7    :     z7      ;       y8        :         z8          \}           ">
+23:<a style="s3\{y9:z9;y10:z11;\}">
+24:<a style=" s4  \{   y12    :     z12      ;       y13        :         z13          ;           \}            ">
 
-25:<a style="s5{aa:ab}s6{ac:ad}">
-26:<a style=" s7  {   ae    :     af      }       s8        {         ag          :           ah            }             ">
-27:<a style="s5{ai:aj;}s6{ak:al;}">
-28:<a style=" s7  {   am    :     an      }       s8        {         ao          :           ap            ;             }              ">
+25:<a style="s5\{aa:ab\}s6\{ac:ad\}">
+26:<a style=" s7  \{   ae    :     af      \}       s8        \{         ag          :           ah            \}             ">
+27:<a style="s5\{ai:aj;\}s6\{ak:al;\}">
+28:<a style=" s7  \{   am    :     an      \}       s8        \{         ao          :           ap            ;             \}              ">
 
-29:<a style="{color: #900} :link {background: #ff0} :visited {background: #fff} :hover {outline: thin red solid} :active {background: #00f}">
-30:<a style="{color: #090; line-height: 1.2} ::first-letter {color: #900}">
-31:<a href="abccomscript" title="a" id="a1" style="{color: #900}
-          :link {background: #ff0}
-          :visited {background: #fff}
-          :hover {outline: thin red solid}
-          :active {background: #00f}">
+29:<a style="\{color: #900\} :link \{background: #ff0\} :visited \{background: #fff\} :hover \{outline: thin red solid\} :active \{background: #00f\}">
+30:<a style="\{color: #090; line-height: 1.2\} ::first-letter \{color: #900\}">
+31:<a href="abccomscript" title="a" id="a1" style="\{color: #900\}
+          :link \{background: #ff0\}
+          :visited \{background: #fff\}
+          :hover \{outline: thin red solid\}
+          :active \{background: #00f\}">
 <style><!--${CommentStartText}   
 
-selector1{ab:cd}
-selector2{ab:cccd;}
-selector3{ab:cd;ef:gh}
-selector4{ab:cd;ef:gh;}
-selector5{ab:cd;x:y;p:q;r:url\(http://a.com\);e:url\("http://b.com"\) ;}
- selector6  {   ab    :     cd      }       
- selector7  {   ab    :     cd      ;       }        
- selector8  {   ab    :     cd      ;       ef        :         gh          }           
- selector9  {   ab    :     cd      ;       ef        :         gh          ;           }            
- selector10  {   ab    :     cd      ;       x         :         y           ;           r            :             url\(http://a.com\)              }               
+selector1\{ab:cd\}
+selector2\{ab:cccd;\}
+selector3\{ab:cd;ef:gh\}
+selector4\{ab:cd;ef:gh;\}
+selector5\{ab:cd;x:y;p:q;r:url\(http://a.com\);e:url\("http://b.com"\) ;\}
+ selector6  \{   ab    :     cd      \}       
+ selector7  \{   ab    :     cd      ;       \}        
+ selector8  \{   ab    :     cd      ;       ef        :         gh          \}           
+ selector9  \{   ab    :     cd      ;       ef        :         gh          ;           \}            
+ selector10  \{   ab    :     cd      ;       x         :         y           ;           r            :             url\(http://a.com\)              \}               
     ${CommentEndText}--></style>$}, "CSS callback - force skip");
 
 $Defang = HTML::Defang->new(
@@ -786,50 +786,50 @@ like($Res, qr{^1:<a style="/\*a:b\*/">
 7:<a style="/\*i3:j3;\*//\*k3:l3;\*/">
 8:<a style=" /\*i4  :   j4    ;\*/     /\*k4      :       l4        ;\*/         ">
 
-9:<a style="{/\*q:r\*/}">
-10:<a style=" {  /\*s   :    t     \*/}      ">
-11:<a style="{/\*u:v;\*/}">
-12:<a style=" {  /\*w   :    x     ;\*/      }       ">
+9:<a style="\{/\*q:r\*/\}">
+10:<a style=" \{  /\*s   :    t     \*/\}      ">
+11:<a style="\{/\*u:v;\*/\}">
+12:<a style=" \{  /\*w   :    x     ;\*/      \}       ">
 
-13:<a style="{/\*i5:j5;\*//\*k5:l5\*/}">
-14:<a style=" {  /\*i6   :    j6     ;\*/      /\*k6       :        l6         \*/}          ">
-15:<a style="{/\*i7:j7;\*//\*k7:l7;\*/}">
-16:<a style=" {  /\*i8   :    j8     ;\*/      /\*k8       :        l8         ;\*/          }          ">
+13:<a style="\{/\*i5:j5;\*//\*k5:l5\*/\}">
+14:<a style=" \{  /\*i6   :    j6     ;\*/      /\*k6       :        l6         \*/\}          ">
+15:<a style="\{/\*i7:j7;\*//\*k7:l7;\*/\}">
+16:<a style=" \{  /\*i8   :    j8     ;\*/      /\*k8       :        l8         ;\*/          \}          ">
 
-17:<a style="s1{/\*y:z\*/}">
-18:<a style=" s1  {   /\*y2    :     z2      \*/}       ">
-19:<a style="s1{/\*y3:z3;\*/}">
-20:<a style=" s1  {   /\*y4    :     z4      ;\*/       }        ">
+17:<a style="s1\{/\*y:z\*/\}">
+18:<a style=" s1  \{   /\*y2    :     z2      \*/\}       ">
+19:<a style="s1\{/\*y3:z3;\*/\}">
+20:<a style=" s1  \{   /\*y4    :     z4      ;\*/       \}        ">
 
-21:<a style="s1{/\*y5:z5;\*//\*y6:z6\*/}">
-22:<a style=" s2  {   /\*y7    :     z7      ;\*/       /\*y8        :         z8          \*/}           ">
-23:<a style="s3{/\*y9:z9;\*//\*y10:z11;\*/}">
-24:<a style=" s4  {   /\*y12    :     z12      ;\*/       /\*y13        :         z13          ;\*/           }            ">
+21:<a style="s1\{/\*y5:z5;\*//\*y6:z6\*/\}">
+22:<a style=" s2  \{   /\*y7    :     z7      ;\*/       /\*y8        :         z8          \*/\}           ">
+23:<a style="s3\{/\*y9:z9;\*//\*y10:z11;\*/\}">
+24:<a style=" s4  \{   /\*y12    :     z12      ;\*/       /\*y13        :         z13          ;\*/           \}            ">
 
-25:<a style="s5{/\*aa:ab\*/}s6{/\*ac:ad\*/}">
-26:<a style=" s7  {   /\*ae    :     af      \*/}       s8        {         /\*ag          :           ah            \*/}             ">
-27:<a style="s5{/\*ai:aj;\*/}s6{/\*ak:al;\*/}">
-28:<a style=" s7  {   /\*am    :     an      \*/}       s8        {         /\*ao          :           ap            ;\*/             }              ">
+25:<a style="s5\{/\*aa:ab\*/\}s6\{/\*ac:ad\*/\}">
+26:<a style=" s7  \{   /\*ae    :     af      \*/\}       s8        \{         /\*ag          :           ah            \*/\}             ">
+27:<a style="s5\{/\*ai:aj;\*/\}s6\{/\*ak:al;\*/\}">
+28:<a style=" s7  \{   /\*am    :     an      \*/\}       s8        \{         /\*ao          :           ap            ;\*/             \}              ">
 
-29:<a style="{/\*color: #900\*/} :link {/\*background: #ff0\*/} :visited {/\*background: #fff\*/} :hover {/\*outline: thin red solid\*/} :active {/\*background: #00f\*/}">
-30:<a style="{/\*color: #090;\*/ /\*line-height: 1.2\*/} ::first-letter {/\*color: #900\*/}">
-31:<a href="abccomscript" title="a" id="a1" style="{/\*color: #900\*/}
-          :link {/\*background: #ff0\*/}
-          :visited {/\*background: #fff\*/}
-          :hover {/\*outline: thin red solid\*/}
-          :active {/\*background: #00f\*/}">
+29:<a style="\{/\*color: #900\*/\} :link \{/\*background: #ff0\*/\} :visited \{/\*background: #fff\*/\} :hover \{/\*outline: thin red solid\*/\} :active \{/\*background: #00f\*/\}">
+30:<a style="\{/\*color: #090;\*/ /\*line-height: 1.2\*/\} ::first-letter \{/\*color: #900\*/\}">
+31:<a href="abccomscript" title="a" id="a1" style="\{/\*color: #900\*/\}
+          :link \{/\*background: #ff0\*/\}
+          :visited \{/\*background: #fff\*/\}
+          :hover \{/\*outline: thin red solid\*/\}
+          :active \{/\*background: #00f\*/\}">
 <style><!--${CommentStartText}   
 
-selector1{/\*ab:cd\*/}
-selector2{/\*ab:cccd;\*/}
-selector3{/\*ab:cd;\*//\*ef:gh\*/}
-selector4{/\*ab:cd;\*//\*ef:gh;\*/}
-selector5{/\*ab:cd;\*//\*x:y;\*//\*p:q;\*//\*r:url\(http://a.com\);\*//\*e:url\("http://b.com"\) ;\*/}
- selector6  {   /\*ab    :     cd      \*/}       
- selector7  {   /\*ab    :     cd      ;\*/       }        
- selector8  {   /\*ab    :     cd      ;\*/       /\*ef        :         gh          \*/}           
- selector9  {   /\*ab    :     cd      ;\*/       /\*ef        :         gh          ;\*/           }            
- selector10  {   /\*ab    :     cd      ;\*/       /\*x         :         y           ;\*/           /\*r            :             url\(http://a.com\)              \*/}               
+selector1\{/\*ab:cd\*/\}
+selector2\{/\*ab:cccd;\*/\}
+selector3\{/\*ab:cd;\*//\*ef:gh\*/\}
+selector4\{/\*ab:cd;\*//\*ef:gh;\*/\}
+selector5\{/\*ab:cd;\*//\*x:y;\*//\*p:q;\*//\*r:url\(http://a.com\);\*//\*e:url\("http://b.com"\) ;\*/\}
+ selector6  \{   /\*ab    :     cd      \*/\}       
+ selector7  \{   /\*ab    :     cd      ;\*/       \}        
+ selector8  \{   /\*ab    :     cd      ;\*/       /\*ef        :         gh          \*/\}           
+ selector9  \{   /\*ab    :     cd      ;\*/       /\*ef        :         gh          ;\*/           \}            
+ selector10  \{   /\*ab    :     cd      ;\*/       /\*x         :         y           ;\*/           /\*r            :             url\(http://a.com\)              \*/\}               
     ${CommentEndText}--></style>}, "CSS callback - force defang");
 
 $Defang = HTML::Defang->new(
@@ -911,50 +911,50 @@ like($Res, qr{^1:<a style="a:b;orange:juice">
 7:<a style="i3:j3;k3:l3;orange:juice">
 8:<a style=" i4  :   j4    ;     k4      :       l4        ;         orange:juice">
 
-9:<a style="{q:r;orange:juice}">
-10:<a style=" {  s   :    t     ;orange:juice}      ">
-11:<a style="{u:v;orange:juice}">
-12:<a style=" {  w   :    x     ;      orange:juice}       ">
+9:<a style="\{q:r;orange:juice\}">
+10:<a style=" \{  s   :    t     ;orange:juice\}      ">
+11:<a style="\{u:v;orange:juice\}">
+12:<a style=" \{  w   :    x     ;      orange:juice\}       ">
 
-13:<a style="{i5:j5;k5:l5;orange:juice}">
-14:<a style=" {  i6   :    j6     ;      k6       :        l6         ;orange:juice}          ">
-15:<a style="{i7:j7;k7:l7;orange:juice}">
-16:<a style=" {  i8   :    j8     ;      k8       :        l8         ;          orange:juice}          ">
+13:<a style="\{i5:j5;k5:l5;orange:juice\}">
+14:<a style=" \{  i6   :    j6     ;      k6       :        l6         ;orange:juice\}          ">
+15:<a style="\{i7:j7;k7:l7;orange:juice\}">
+16:<a style=" \{  i8   :    j8     ;      k8       :        l8         ;          orange:juice\}          ">
 
-17:<a style="s1{y:z;orange:juice}">
-18:<a style=" s1  {   y2    :     z2      ;orange:juice}       ">
-19:<a style="s1{y3:z3;orange:juice}">
-20:<a style=" s1  {   y4    :     z4      ;       orange:juice}        ">
+17:<a style="s1\{y:z;orange:juice\}">
+18:<a style=" s1  \{   y2    :     z2      ;orange:juice\}       ">
+19:<a style="s1\{y3:z3;orange:juice\}">
+20:<a style=" s1  \{   y4    :     z4      ;       orange:juice\}        ">
 
-21:<a style="s1{y5:z5;y6:z6;orange:juice}">
-22:<a style=" s2  {   y7    :     z7      ;       y8        :         z8          ;orange:juice}           ">
-23:<a style="s3{y9:z9;y10:z11;orange:juice}">
-24:<a style=" s4  {   y12    :     z12      ;       y13        :         z13          ;           orange:juice}            ">
+21:<a style="s1\{y5:z5;y6:z6;orange:juice\}">
+22:<a style=" s2  \{   y7    :     z7      ;       y8        :         z8          ;orange:juice\}           ">
+23:<a style="s3\{y9:z9;y10:z11;orange:juice\}">
+24:<a style=" s4  \{   y12    :     z12      ;       y13        :         z13          ;           orange:juice\}            ">
 
-25:<a style="s5{aa:ab;orange:juice}s6{ac:ad;orange:juice}">
-26:<a style=" s7  {   ae    :     af      ;orange:juice}       s8        {         ag          :           ah            ;orange:juice}             ">
-27:<a style="s5{ai:aj;orange:juice}s6{ak:al;orange:juice}">
-28:<a style=" s7  {   am    :     an      ;orange:juice}       s8        {         ao          :           ap            ;             orange:juice}              ">
+25:<a style="s5\{aa:ab;orange:juice\}s6\{ac:ad;orange:juice\}">
+26:<a style=" s7  \{   ae    :     af      ;orange:juice\}       s8        \{         ag          :           ah            ;orange:juice\}             ">
+27:<a style="s5\{ai:aj;orange:juice\}s6\{ak:al;orange:juice\}">
+28:<a style=" s7  \{   am    :     an      ;orange:juice\}       s8        \{         ao          :           ap            ;             orange:juice\}              ">
 
-29:<a style="{color: #900;orange:juice} :link {background: #ff0;orange:juice} :visited {background: #fff;orange:juice} :hover {outline: thin red solid;orange:juice} :active {background: #00f;orange:juice}">
-30:<a style="{color: #090; line-height: 1.2;orange:juice} ::first-letter {color: #900;orange:juice}">
-31:<a href="abccomscript" title="a" id="a1" style="{color: #900;orange:juice}
-          :link {background: #ff0;orange:juice}
-          :visited {background: #fff;orange:juice}
-          :hover {outline: thin red solid;orange:juice}
-          :active {background: #00f;orange:juice}">
+29:<a style="\{color: #900;orange:juice\} :link \{background: #ff0;orange:juice\} :visited \{background: #fff;orange:juice\} :hover \{outline: thin red solid;orange:juice\} :active \{background: #00f;orange:juice\}">
+30:<a style="\{color: #090; line-height: 1.2;orange:juice\} ::first-letter \{color: #900;orange:juice\}">
+31:<a href="abccomscript" title="a" id="a1" style="\{color: #900;orange:juice\}
+          :link \{background: #ff0;orange:juice\}
+          :visited \{background: #fff;orange:juice\}
+          :hover \{outline: thin red solid;orange:juice\}
+          :active \{background: #00f;orange:juice\}">
 <style><!--${CommentStartText}   
 
-selector1{ab:cd;orange:juice}
-selector2{ab:cccd;orange:juice}
-selector3{ab:cd;ef:gh;orange:juice}
-selector4{ab:cd;ef:gh;orange:juice}
-selector5{ab:cd;x:y;p:q;/\*r:url\(http://a.com\);\*//\*e:url\("http://b.com"\) ;\*/orange:juice}
- selector6  {   ab    :     cd      ;orange:juice}       
- selector7  {   ab    :     cd      ;       orange:juice}        
- selector8  {   ab    :     cd      ;       ef        :         gh          ;orange:juice}           
- selector9  {   ab    :     cd      ;       ef        :         gh          ;           orange:juice}            
- selector10  {   ab    :     cd      ;       x         :         y           ;           /\*r            :             url\(http://a.com\)              ;\*/orange:juice}               
+selector1\{ab:cd;orange:juice\}
+selector2\{ab:cccd;orange:juice\}
+selector3\{ab:cd;ef:gh;orange:juice\}
+selector4\{ab:cd;ef:gh;orange:juice\}
+selector5\{ab:cd;x:y;p:q;/\*r:url\(http://a.com\);\*//\*e:url\("http://b.com"\) ;\*/orange:juice\}
+ selector6  \{   ab    :     cd      ;orange:juice\}       
+ selector7  \{   ab    :     cd      ;       orange:juice\}        
+ selector8  \{   ab    :     cd      ;       ef        :         gh          ;orange:juice\}           
+ selector9  \{   ab    :     cd      ;       ef        :         gh          ;           orange:juice\}            
+ selector10  \{   ab    :     cd      ;       x         :         y           ;           /\*r            :             url\(http://a.com\)              ;\*/orange:juice\}               
     ${CommentEndText}--></style>$}, "CSS callback - insert attribute");
 
 
@@ -1037,50 +1037,50 @@ like($Res, qr{^1:<a style="">
 7:<a style="i3:j3;">
 8:<a style=" i4  :   j4    ;     ">
 
-9:<a style="{}">
-10:<a style=" {}      ">
-11:<a style="{}">
-12:<a style=" {}       ">
+9:<a style="\{\}">
+10:<a style=" \{\}      ">
+11:<a style="\{\}">
+12:<a style=" \{\}       ">
 
-13:<a style="{i5:j5;}">
-14:<a style=" {  i6   :    j6     ;      }          ">
-15:<a style="{i7:j7;}">
-16:<a style=" {  i8   :    j8     ;      }          ">
+13:<a style="\{i5:j5;\}">
+14:<a style=" \{  i6   :    j6     ;      \}          ">
+15:<a style="\{i7:j7;\}">
+16:<a style=" \{  i8   :    j8     ;      \}          ">
 
-17:<a style="s1{}">
-18:<a style=" s1  {}       ">
-19:<a style="s1{}">
-20:<a style=" s1  {}        ">
+17:<a style="s1\{\}">
+18:<a style=" s1  \{\}       ">
+19:<a style="s1\{\}">
+20:<a style=" s1  \{\}        ">
 
-21:<a style="s1{y5:z5;}">
-22:<a style=" s2  {   y7    :     z7      ;       }           ">
-23:<a style="s3{y9:z9;}">
-24:<a style=" s4  {   y12    :     z12      ;       }            ">
+21:<a style="s1\{y5:z5;\}">
+22:<a style=" s2  \{   y7    :     z7      ;       \}           ">
+23:<a style="s3\{y9:z9;\}">
+24:<a style=" s4  \{   y12    :     z12      ;       \}            ">
 
-25:<a style="s5{}s6{}">
-26:<a style=" s7  {}       s8        {}             ">
-27:<a style="s5{}s6{}">
-28:<a style=" s7  {}       s8        {}              ">
+25:<a style="s5\{\}s6\{\}">
+26:<a style=" s7  \{\}       s8        \{\}             ">
+27:<a style="s5\{\}s6\{\}">
+28:<a style=" s7  \{\}       s8        \{\}              ">
 
-29:<a style="{} :link {} :visited {} :hover {} :active {}">
-30:<a style="{color: #090; } ::first-letter {}">
-31:<a href="abccomscript" title="a" id="a1" style="{}
-          :link {}
-          :visited {}
-          :hover {}
-          :active {}">
+29:<a style="\{\} :link \{\} :visited \{\} :hover \{\} :active \{\}">
+30:<a style="\{color: #090; \} ::first-letter \{\}">
+31:<a href="abccomscript" title="a" id="a1" style="\{\}
+          :link \{\}
+          :visited \{\}
+          :hover \{\}
+          :active \{\}">
 <style><!--${CommentStartText}   
 
-selector1{}
-selector2{}
-selector3{ab:cd;}
-selector4{ab:cd;}
-selector5{ab:cd;x:y;p:q;/\*r:url\(http://a.com\);\*/}
- selector6  {}       
- selector7  {}        
- selector8  {   ab    :     cd      ;       }           
- selector9  {   ab    :     cd      ;       }            
- selector10  {   ab    :     cd      ;       x         :         y           ;           }               
+selector1\{\}
+selector2\{\}
+selector3\{ab:cd;\}
+selector4\{ab:cd;\}
+selector5\{ab:cd;x:y;p:q;/\*r:url\(http://a.com\);\*/\}
+ selector6  \{\}       
+ selector7  \{\}        
+ selector8  \{   ab    :     cd      ;       \}           
+ selector9  \{   ab    :     cd      ;       \}            
+ selector10  \{   ab    :     cd      ;       x         :         y           ;           \}               
     ${CommentEndText}--></style>$}, "CSS callback - remove attribute from style rule end");
 
 $Defang = HTML::Defang->new(
@@ -1102,7 +1102,7 @@ EOF
 $Res = $Defang->defang($H);
 like($Res, qr{1:<a STYLE="a:b;orange:juice">}, "Style callback attribute in upper case");
 like($Res, qr{2:<a STYLE="A:b;orange:juice">}, "Style callback attribute and style property in upper case");
-like($Res, qr{3:<STYLE><!--${CommentStartText}A {WIDTH: 30;orange:juice}${CommentEndText}--></STYLE>}, "Style callback tag and style property in upper case");
+like($Res, qr{3:<STYLE><!--${CommentStartText}A \{WIDTH: 30;orange:juice\}${CommentEndText}--></STYLE>}, "Style callback tag and style property in upper case");
 
 #################################
 #  Multiple callback test

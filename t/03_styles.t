@@ -41,7 +41,7 @@ EOF
 $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
-p {font-family: "sans serif"}
+p \{font-family: "sans serif"\}
 $CommentEndText--></style>$}s, "Style tag property with quotes and space");
 
 $H = <<EOF;
@@ -52,7 +52,7 @@ EOF
 $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
-p {text-align:center;color:red}
+p \{text-align:center;color:red\}
 $CommentEndText--></style>
 $}s, "Multiple properties");
 
@@ -70,11 +70,11 @@ $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
 p
-{
+\{
 text-align: center;
 color: black;
 font-family: arial
-}
+\}
 $CommentEndText--></style>
 $}s, "Multiple properties in readable format");
 
@@ -90,9 +90,9 @@ $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
 h1,h2,h3,h4,h5,h6 
-{
+\{
 color: green
-}
+\}
 $CommentEndText--></style>
 $}s, "Multiple selectors");
 
@@ -105,8 +105,8 @@ EOF
 $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
-p.right {text-align: right}
-p.center {text-align: center}
+p.right \{text-align: right\}
+p.center \{text-align: center\}
 $CommentEndText--></style>
 $}s, "Selector with a period");
 
@@ -118,19 +118,19 @@ EOF
 $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
-.center {text-align: center}
+.center \{text-align: center\}
 $CommentEndText--></style>
 $}, "Selector starting in a period");
 
 $H = <<EOF;
 <style>
-input[type="text"] {background-color: blue}
+input[type="text"] \{background-color: blue\}
 </style>
 EOF
 $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
-input\[type="text"\] {background-color: blue}
+input\[type="text"\] \{background-color: blue\}
 $CommentEndText--></style>
 $}s, "Selector with square brackets");
 
@@ -142,7 +142,7 @@ EOF
 $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
-#green {color: green}
+#green \{color: green\}
 $CommentEndText--></style>
 $}s, "Selector starting with a hash");
 
@@ -159,10 +159,10 @@ $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
 p#para1
-{
+\{
 text-align: center;
 color: red
-}
+\}
 $CommentEndText--></style>
 $}s, "Selector with a hash");
 
@@ -186,12 +186,12 @@ $Res = $Defang->defang($H);
 like($Res, qr{^<style><!--${CommentStartText}
 
 p
-{
+\{
 text-align: center;
 
 color: black;
 font-family: arial 
-}
+\}
 $CommentEndText--></style>
 $}s, "All sorts of comments");
 
@@ -249,14 +249,14 @@ $H = <<EOF;
 EOF
 $Res = $Defang->defang($H);
 
-like($Res, qr{^<STYLE><!--${CommentStartText}BODY{/\*-moz-binding:url\("http://ha.ckers.org/xssmoz.xml#xss"\)\*/}$CommentEndText--></STYLE>$}s, "Remote style sheet part 4");
+like($Res, qr{^<STYLE><!--${CommentStartText}BODY\{/\*-moz-binding:url\("http://ha.ckers.org/xssmoz.xml#xss"\)\*/\}$CommentEndText--></STYLE>$}s, "Remote style sheet part 4");
 
 $H = <<EOF;
 <STYLE>li {list-style-image: url("javascript:alert('XSS')");}</STYLE><UL><LI>XSS
 EOF
 $Res = $Defang->defang($H);
 
-like($Res, qr{^<STYLE><!--${CommentStartText}li {/\*list-style-image: url\("javascript:alert\('XSS'\)"\);\*/}$CommentEndText--></STYLE><UL><LI>XSS$}s, "List-style-image");
+like($Res, qr{^<STYLE><!--${CommentStartText}li \{/\*list-style-image: url\("javascript:alert\('XSS'\)"\);\*/\}$CommentEndText--></STYLE><UL><LI>XSS$}s, "List-style-image");
 
 $H = <<'EOF';
 <STYLE>@im\port'\ja\vasc\ript:alert("XSS")';</STYLE>
@@ -278,7 +278,7 @@ EOF
 $Res = $Defang->defang($H);
 like($Res, qr{^<STYLE><!--${CommentStartText}
 
-a{sss:sss}$CommentEndText--></STYLE>$}s, "Removing multiple css imports");
+a\{sss:sss\}$CommentEndText--></STYLE>$}s, "Removing multiple css imports");
 
 $H = <<EOF;
 <STYLE>\@import'javascript:alert("XSS")';
@@ -293,12 +293,12 @@ EOF
 $Res = $Defang->defang($H);
 like($Res, qr{^<STYLE><!--${CommentStartText}
 
-a{sss:11111111}$CommentEndText--></STYLE>
+a\{sss:11111111\}$CommentEndText--></STYLE>
 <!--defang_someunknowntag-->
 <br>
 <STYLE><!--${CommentStartText}
 
-a{sss:22222222}$CommentEndText--></STYLE>$}s, "Removing multiple css imports with multiple styles");
+a\{sss:22222222\}$CommentEndText--></STYLE>$}s, "Removing multiple css imports with multiple styles");
 
 $H = <<EOF;
 <STYLE>
@@ -310,7 +310,7 @@ EOF
 $Res = $Defang->defang($H);
 like($Res, qr{^<STYLE>
 <!--${CommentStartText}
-p {property: value}
+p \{property: value\}
 $CommentEndText-->
 </STYLE>$}s, "Removing HTML comments");
 
@@ -471,7 +471,7 @@ $H = <<EOF;
 <style>em{color:red};\@import url(&#34;style.css&#34;);</style>
 EOF
 $Res = $Defang->defang($H);
-like($Res, qr{^<style><!--${CommentStartText}em{color:red}$CommentEndText--></style>$}, "Test 26");
+like($Res, qr{^<style><!--${CommentStartText}em\{color:red\}$CommentEndText--></style>$}, "Test 26");
 
 $H = <<EOF;
 <style>\@import url(&#34;style.css&#34;);</style>
@@ -597,13 +597,13 @@ like($Res, qr{25:<a style="s5\{aa:ab\}s6\{ac:ad\}">}s, "Test style attribute - m
 like($Res, qr{26:<a style=" s7  \{   ae    :     af      \}       s8        \{         ag          :           ah            \}             ">}s, "Test style attribute - multiple property pairs with selectors, braces and spaces but without semi-colon");
 like($Res, qr{27:<a style="s5\{ai:aj;\}s6\{ak:al;\}">}s, "Test style attribute - multiple property pairs with selectors, braces and semi-colon but without spaces");
 like($Res, qr{28:<a style=" s7  \{   am    :     an      \}       s8        \{         ao          :           ap            ;             \}              ">}s, "Test style attribute - multiple property pairs with selectors, braces spaces and semi-colon");
-like($Res, qr{29:<a style="{color: #900} :link {background: #ff0} :visited {background: #fff} :hover {outline: thin red solid} :active {background: #00f}">}s, "Test style attribute - style rule with and without selectors");
-like($Res, qr{30:<a style="{color: #090; line-height: 1.2} ::first-letter {color: #900}">}, "Test style attribute - style rule with and without selectors in single line");
-like($Res, qr{31:<a href="abccomscript" title="a" id="a1" style="{color: #900}
-          :link {background: #ff0}
-          :visited {background: #fff}
-          :hover {outline: thin red solid}
-          :active {background: #00f}">
+like($Res, qr{29:<a style="\{color: #900\} :link \{background: #ff0\} :visited \{background: #fff\} :hover \{outline: thin red solid\} :active \{background: #00f\}">}s, "Test style attribute - style rule with and without selectors");
+like($Res, qr{30:<a style="\{color: #090; line-height: 1.2\} ::first-letter \{color: #900\}">}, "Test style attribute - style rule with and without selectors in single line");
+like($Res, qr{31:<a href="abccomscript" title="a" id="a1" style="\{color: #900\}
+          :link \{background: #ff0\}
+          :visited \{background: #fff\}
+          :hover \{outline: thin red solid\}
+          :active \{background: #00f\}">
 $}, "Test style attribute - style rule with and without selectors over multiple lines");
 
 $H = <<EOF;
@@ -625,16 +625,16 @@ $Res = $Defang->defang($H);
 
 like($Res, qr{<style><!--${CommentStartText}   
 
-selector1{ab:cd}
-selector2{ab:cd;}
-selector3{ab:cd;ef:gh}
-selector4{ab:cd;ef:gh;}
-selector5{ab:cd;x:y;p:q;/\*r:url\(http://a.com\);\*//\*e:url\("http://b.com"\) ;\*/}
- selector6  {   ab    :     cd      }       
- selector7  {   ab    :     cd      ;       }        
- selector8  {   ab    :     cd      ;       ef        :         gh          }           
- selector9  {   ab    :     cd      ;       ef        :         gh          ;           }            
- selector10  {   ab    :     cd      ;       x         :         y           ;           /\*r            :             url\(http://a.com\)              \*/}               
+selector1\{ab:cd\}
+selector2\{ab:cd;\}
+selector3\{ab:cd;ef:gh\}
+selector4\{ab:cd;ef:gh;\}
+selector5\{ab:cd;x:y;p:q;/\*r:url\(http://a.com\);\*//\*e:url\("http://b.com"\) ;\*/\}
+ selector6  \{   ab    :     cd      \}       
+ selector7  \{   ab    :     cd      ;       \}        
+ selector8  \{   ab    :     cd      ;       ef        :         gh          \}           
+ selector9  \{   ab    :     cd      ;       ef        :         gh          ;           \}            
+ selector10  \{   ab    :     cd      ;       x         :         y           ;           /\*r            :             url\(http://a.com\)              \*/\}               
     $CommentEndText--></style>}s, "Test style tag css with and without spaces");
 
 $H = <<EOF;
@@ -653,7 +653,7 @@ like($Res, qr{^<style>
 
 <!--${CommentStartText}
 
-body {color: black}
+body \{color: black\}
 
 $CommentEndText-->  
 </style>$}s, "Style tag with HTML comments");
@@ -666,6 +666,6 @@ EOF
 $Res = $Defang->defang($H);
 
 like($Res, qr{^<style><!--${CommentStartText}
-body {color: black}
+body \{color: black\}
 $CommentEndText--></style>$}s, "Style tag without HTML comments");
 
